@@ -214,20 +214,17 @@ class OVLMBridgeServer:
 
         api_key = os.environ["SCENTIENCE_API_KEY"]
         self._char_uuid = os.environ["SCENTIENCE_CHAR_UUID"]
+        self._device_address = os.environ.get("SCENTIENCE_DEVICE_ADDRESS")
         self.device = scn.ScentienceDevice(api_key=api_key)
 
     async def _connect_ble(self):
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(
-            None, lambda: self.device.connect_ble(char_uuid=self._char_uuid)
+        await asyncio.to_thread(
+            lambda: self.device.connect_ble(char_uuid=self._char_uuid, device_uid=self._device_address)
         )
         logger.info("BLE connection established (char_uuid=%s)", self._char_uuid)
 
     async def _sample_ble(self) -> Dict:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            None, lambda: self.device.sample_ble(**{"async": True})
-        )
+        return await asyncio.to_thread(self.device.sample_ble)
 
     # ── Client management ──────────────────────────────────────────────────────
 
