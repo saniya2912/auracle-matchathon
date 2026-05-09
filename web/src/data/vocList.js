@@ -1,0 +1,16 @@
+export const vocChannels = [
+  { formula: 'CO₂', name: 'Carbon dioxide' },
+  { formula: 'NH₃', name: 'Ammonia' },
+  { formula: 'NO', name: 'Nitric oxide' },
+  { formula: 'NO₂', name: 'Nitrogen dioxide' },
+  { formula: 'CO', name: 'Carbon monoxide' },
+  { formula: 'C₂H₅OH', name: 'Ethanol' },
+  { formula: 'H₂', name: 'Hydrogen' },
+  { formula: 'CH₄', name: 'Methane' },
+  { formula: 'C₃H₈', name: 'Propane' },
+  { formula: 'C₄H₁₀', name: 'Butane' },
+  { formula: 'H₂S', name: 'Hydrogen sulfide' },
+  { formula: 'HCHO', name: 'Formaldehyde' },
+  { formula: 'SO₂', name: 'Sulfur dioxide' },
+  { formula: 'VOC', name: 'Total VOC channel', aggregate: true },
+];
