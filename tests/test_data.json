@@ -1,0 +1,82 @@
+{
+  "_comment": "Reference sensor data scenarios for manual testing",
+  "scenarios": [
+    {
+      "name": "Normal — clean air, low stress",
+      "sensor_data": {
+        "UID": "SCN001",
+        "TIMESTAMP": "2026-05-09T10:00:00",
+        "ENV_temperatureC": 22.1,
+        "ENV_humidity": 45.0,
+        "ENV_pressureHpa": 1013.0,
+        "BATT_charge": 90,
+        "CO2": 410,
+        "NH3": 80,
+        "NO": 3,
+        "NO2": 2,
+        "CO": 400,
+        "C2H5OH": 10,
+        "H2": 110,
+        "CH4": 320,
+        "VOC": 900
+      },
+      "expected": {
+        "stress_level": "low",
+        "quality_level": "excellent",
+        "activate_filter": false
+      }
+    },
+    {
+      "name": "Moderate stress — elevated NH3 and VOC",
+      "sensor_data": {
+        "UID": "SCN001",
+        "TIMESTAMP": "2026-05-09T10:05:00",
+        "ENV_temperatureC": 23.4,
+        "ENV_humidity": 52.3,
+        "ENV_pressureHpa": 1011.0,
+        "BATT_charge": 85,
+        "CO2": 600,
+        "NH3": 200,
+        "NO": 8,
+        "NO2": 7,
+        "CO": 800,
+        "C2H5OH": 100,
+        "H2": 130,
+        "CH4": 400,
+        "VOC": 2500
+      },
+      "expected": {
+        "stress_level": "moderate",
+        "quality_level": "moderate",
+        "activate_filter": true
+      }
+    },
+    {
+      "name": "High stress — peak pollutants",
+      "sensor_data": {
+        "UID": "SCN001",
+        "TIMESTAMP": "2026-05-09T10:10:00",
+        "ENV_temperatureC": 25.0,
+        "ENV_humidity": 60.0,
+        "ENV_pressureHpa": 1008.0,
+        "BATT_charge": 78,
+        "CO2": 1100,
+        "NH3": 350,
+        "NO": 18,
+        "NO2": 17,
+        "CO": 1400,
+        "C2H5OH": 400,
+        "H2": 180,
+        "CH4": 550,
+        "VOC": 4000
+      },
+      "expected": {
+        "stress_level": "high",
+        "quality_level": "poor",
+        "activate_filter": true,
+        "filter_mode": "stress_reduction",
+        "fan_speed": 85
+      }
+    }
+  ]
+}

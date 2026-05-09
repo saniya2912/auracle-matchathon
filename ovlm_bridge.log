@@ -1,0 +1,43 @@
+2026-05-09 13:43:13,995 [INFO] __main__: Starting OVLM Bridge Server on 0.0.0.0:8765
+2026-05-09 13:43:14,013 [INFO] websockets.server: server listening on 0.0.0.0:8765
+2026-05-09 13:43:14,013 [INFO] __main__: 🚀 OVLM Bridge Server ready on ws://0.0.0.0:8765
+2026-05-09 13:43:21,543 [INFO] __main__: Starting OVLM Bridge Server on 0.0.0.0:8765
+2026-05-09 13:43:57,620 [INFO] __main__: Starting OVLM Bridge Server on 0.0.0.0:8765
+2026-05-09 13:43:57,632 [INFO] websockets.server: server listening on 0.0.0.0:8765
+2026-05-09 13:43:57,632 [INFO] __main__: 🚀 OVLM Bridge Server ready on ws://0.0.0.0:8765
+2026-05-09 13:43:59,653 [INFO] websockets.server: connection open
+2026-05-09 13:43:59,653 [INFO] __main__: Client connected. Total: 1
+2026-05-09 13:43:59,654 [INFO] __main__: Client disconnected. Total: 0
+2026-05-09 13:43:59,655 [INFO] websockets.server: connection open
+2026-05-09 13:43:59,655 [INFO] __main__: Client connected. Total: 1
+2026-05-09 13:43:59,656 [INFO] __main__: Single sample requested
+2026-05-09 13:43:59,656 [INFO] __main__: Sent OVLM analysis to 1 clients
+2026-05-09 13:43:59,657 [INFO] __main__: Client disconnected. Total: 0
+2026-05-09 13:43:59,658 [INFO] websockets.server: connection open
+2026-05-09 13:43:59,658 [INFO] __main__: Client connected. Total: 1
+2026-05-09 13:43:59,659 [INFO] __main__: Streaming started
+2026-05-09 13:43:59,659 [INFO] __main__: Streaming stopped
+2026-05-09 13:43:59,660 [INFO] __main__: Client disconnected. Total: 0
+2026-05-09 13:43:59,661 [INFO] websockets.server: connection open
+2026-05-09 13:43:59,662 [INFO] __main__: Client connected. Total: 1
+2026-05-09 13:43:59,662 [INFO] __main__: Custom query: How is my air quality today?
+2026-05-09 13:43:59,663 [INFO] __main__: Client disconnected. Total: 0
+2026-05-09 13:43:59,664 [INFO] websockets.server: connection open
+2026-05-09 13:43:59,665 [INFO] __main__: Client connected. Total: 1
+2026-05-09 13:43:59,665 [ERROR] __main__: Invalid JSON from client: this is not json {{{{
+2026-05-09 13:43:59,666 [INFO] __main__: Single sample requested
+2026-05-09 13:43:59,666 [INFO] __main__: Sent OVLM analysis to 1 clients
+2026-05-09 13:43:59,666 [INFO] __main__: Client disconnected. Total: 0
+2026-05-09 13:43:59,668 [INFO] websockets.server: connection open
+2026-05-09 13:43:59,668 [INFO] __main__: Client connected. Total: 1
+2026-05-09 13:43:59,669 [INFO] websockets.server: connection open
+2026-05-09 13:43:59,670 [INFO] __main__: Client connected. Total: 2
+2026-05-09 13:43:59,670 [INFO] __main__: Single sample requested
+2026-05-09 13:43:59,671 [INFO] __main__: Sent OVLM analysis to 2 clients
+2026-05-09 13:43:59,672 [INFO] __main__: Client disconnected. Total: 1
+2026-05-09 13:43:59,672 [INFO] __main__: Client disconnected. Total: 0
+2026-05-09 13:43:59,674 [INFO] websockets.server: connection open
+2026-05-09 13:43:59,674 [INFO] __main__: Client connected. Total: 1
+2026-05-09 13:43:59,674 [INFO] __main__: Single sample requested
+2026-05-09 13:43:59,675 [INFO] __main__: Sent OVLM analysis to 1 clients
+2026-05-09 13:43:59,675 [INFO] __main__: Client disconnected. Total: 0
