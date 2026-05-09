@@ -15,55 +15,13 @@ import {
 } from 'react-native';
 import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import { check, PERMISSIONS, request, RESULTS } from 'react-native-permissions';
-import { BRIDGE_SERVER_URL } from '@env';
+import { ScentienceDevice } from 'scentience';
+import { BRIDGE_SERVER_URL, SCENTIENCE_API_KEY, SCENTIENCE_CHAR_UUID } from '@env';
 
-// ── Config ────────────────────────────────────────────────────────────────────
 // Falls back to localhost when .env is not set (simulator use-case).
 const WS_URL = BRIDGE_SERVER_URL || 'ws://localhost:8765';
 
-// ── Mock Scentience SDK ───────────────────────────────────────────────────────
-// Replace with the real SDK when available: import Scentience from 'scentience';
-const MockScentienceSDK = {
-  ScentienceDevice: class {
-    constructor(apiKey) {
-      this.apiKey = apiKey;
-      this.connected = false;
-    }
-
-    async connectSocket() {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      this.connected = true;
-      return { success: true };
-    }
-
-    async sample({ async: _async = true } = {}) {
-      if (!this.connected) throw new Error('Device not connected');
-      return {
-        UID: 'SCN001',
-        TIMESTAMP: new Date().toISOString(),
-        ENV_temperatureC: 22 + (Math.random() - 0.5) * 4,
-        ENV_humidity: 45 + (Math.random() - 0.5) * 20,
-        ENV_pressureHpa: 1010 + (Math.random() - 0.5) * 10,
-        BATT_charge: 85,
-        CO2: 400 + Math.random() * 200,
-        NH3: 150 + Math.random() * 400,
-        NO: Math.random() * 25,
-        NO2: Math.random() * 25,
-        CO: 500 + Math.random() * 1000,
-        C2H5OH: Math.random() * 600,
-        H2: 100 + Math.random() * 150,
-        CH4: 300 + Math.random() * 300,
-        VOC: 1500 + Math.random() * 2000,
-      };
-    }
-  },
-};
-
 // ── WebSocket Helper ──────────────────────────────────────────────────────────
-/**
- * Sends sensor data to the bridge server over WebSocket.
- * Falls back gracefully if the server is unreachable.
- */
 async function sendSensorDataToServer(ws, sensorData, visualContext) {
   if (!ws || ws.readyState !== WebSocket.OPEN) return;
   const payload = JSON.stringify({
@@ -78,7 +36,7 @@ async function sendSensorDataToServer(ws, sensorData, visualContext) {
 // ── Main Component ─────────────────────────────────────────────────────────────
 const ScentieceDataCollector = () => {
   const [deviceConnected, setDeviceConnected] = useState(false);
-  const [wsStatus, setWsStatus] = useState('disconnected'); // 'disconnected' | 'connecting' | 'connected'
+  const [wsStatus, setWsStatus] = useState('disconnected');
   const [isStreaming, setIsStreaming] = useState(false);
   const [sensorData, setSensorData] = useState(null);
   const [cameraPermission, setCameraPermission] = useState(false);
@@ -137,19 +95,19 @@ const ScentieceDataCollector = () => {
 
     ws.onclose = () => {
       setWsStatus('disconnected');
-      // Auto-reconnect after 4 seconds
       reconnectTimer.current = setTimeout(connectWebSocket, 4000);
     };
   }, []);
 
-  // ── Scentience Device ─────────────────────────────────────────────────────
+  // ── Scentience Device (BLE) ───────────────────────────────────────────────
   const initializeScentieceDevice = useCallback(async () => {
     try {
-      scentienceDevice.current = new MockScentienceSDK.ScentienceDevice('YOUR_API_KEY');
-      await scentienceDevice.current.connectSocket();
+      const dev = new ScentienceDevice(SCENTIENCE_API_KEY);
+      await dev.connectBLE({ charUuid: SCENTIENCE_CHAR_UUID });
+      scentienceDevice.current = dev;
       setDeviceConnected(true);
     } catch (error) {
-      Alert.alert('Connection Error', `Failed to connect to Scentience device: ${error.message}`);
+      Alert.alert('BLE Connection Error', `Failed to connect to Scentience device: ${error.message}`);
     }
   }, []);
 
@@ -182,7 +140,7 @@ const ScentieceDataCollector = () => {
   const collectSensorData = async () => {
     if (!deviceConnected || !scentienceDevice.current) return null;
     try {
-      const data = await scentienceDevice.current.sample({ async: true });
+      const data = await scentienceDevice.current.sampleBLE({ async: true });
       setSensorData(data);
       return data;
     } catch (error) {
@@ -266,7 +224,7 @@ const ScentieceDataCollector = () => {
         <View style={styles.statusContainer}>
           <View style={[styles.statusIndicator, { backgroundColor: deviceConnected ? '#2ECC71' : '#E74C3C' }]} />
           <Text style={styles.statusText}>
-            {deviceConnected ? 'Scentience: Connected' : 'Scentience: Disconnected'}
+            {deviceConnected ? 'Scentience BLE: Connected' : 'Scentience BLE: Disconnected'}
           </Text>
         </View>
 

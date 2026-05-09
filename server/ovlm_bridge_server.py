@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Scentience OVLM Bridge Server
-Connects Scentience sensor data + OVLM processing to iOS Nose Filter App via WebSocket
+Connects Scentience BLE device + OVLM processing to iOS Nose Filter App via WebSocket
 """
 
 import asyncio
@@ -10,16 +10,14 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import Dict, Any, Optional, Set
+from typing import Dict, Any, Set
 import uuid
 from logging.handlers import RotatingFileHandler
+from dotenv import load_dotenv
 
-# Mock Scentience imports (replace with actual when available)
-try:
-    import scentience as scn
-except ImportError:
-    print("Scentience package not found - using mock data")
-    scn = None
+load_dotenv()
+
+import scentience as scn
 
 # ── Logging setup ──────────────────────────────────────────────────────────────
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -39,33 +37,16 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class MockScentienceDevice:
-    """Mock Scentience device for testing"""
-
-    async def sample(self, async_mode=True):
-        import random
-
-        return {
-            "UID": "SCN001",
-            "TIMESTAMP": datetime.now().isoformat(),
-            "ENV_temperatureC": 22 + random.uniform(-2, 2),
-            "ENV_humidity": 45 + random.uniform(-10, 10),
-            "ENV_pressureHpa": 1010 + random.uniform(-5, 5),
-            "BATT_charge": 85,
-            "CO2": 400 + random.uniform(-50, 100),
-            "NH3": 200 + random.uniform(0, 300),
-            "NO": random.uniform(0, 20),
-            "NO2": random.uniform(0, 20),
-            "CO": 800 + random.uniform(0, 800),
-            "C2H5OH": random.uniform(0, 500),
-            "H2": random.uniform(100, 200),
-            "CH4": random.uniform(300, 500),
-            "VOC": 2000 + random.uniform(0, 2000),
-        }
-
-
 class OVLMProcessor:
-    """OVLM Processing and Natural Language Generation"""
+    """
+    Rule-based olfactory analysis.
+
+    TODO: Replace analyze_hormone_indicators and analyze_air_quality with
+    inference calls to the olfaction-only model once it is published on
+    Hugging Face (vision encoder stripped, expected end of week).
+    The natural_language_summary can then be driven by model output rather
+    than the hand-coded scoring below.
+    """
 
     def __init__(self):
         self.stress_compounds = ["NH3", "CO", "VOC"]
@@ -221,20 +202,34 @@ class OVLMProcessor:
 
 
 class OVLMBridgeServer:
-    """WebSocket server bridging Scentience to iOS app"""
+    """WebSocket server bridging Scentience BLE device to iOS app"""
 
     def __init__(self, host: str = "0.0.0.0", port: int = 8765):
         self.host = host
         self.port = port
         self.clients: Set = set()
-        self.device = (
-            MockScentienceDevice()
-            if scn is None
-            else scn.ScentienceDevice(api_key=os.getenv("SCENTIENCE_API_KEY", "YOUR_API_KEY"))
-        )
         self.ovlm = OVLMProcessor()
         self.is_streaming = False
         self._streaming_interval = int(os.getenv("STREAMING_INTERVAL_SECONDS", "5"))
+
+        api_key = os.environ["SCENTIENCE_API_KEY"]
+        self._char_uuid = os.environ["SCENTIENCE_CHAR_UUID"]
+        self.device = scn.ScentienceDevice(api_key=api_key)
+
+    async def _connect_ble(self):
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(
+            None, lambda: self.device.connect_ble(char_uuid=self._char_uuid)
+        )
+        logger.info("BLE connection established (char_uuid=%s)", self._char_uuid)
+
+    async def _sample_ble(self) -> Dict:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None, lambda: self.device.sample_ble(**{"async": True})
+        )
+
+    # ── Client management ──────────────────────────────────────────────────────
 
     async def register_client(self, websocket):
         self.clients.add(websocket)
@@ -268,9 +263,11 @@ class OVLMBridgeServer:
         for client in disconnected:
             self.clients.discard(client)
 
+    # ── Core analysis ──────────────────────────────────────────────────────────
+
     async def process_sensor_sample(self):
         try:
-            sensor_data = await self.device.sample(async_mode=True)
+            sensor_data = await self._sample_ble()
             hormone_analysis = await self.ovlm.analyze_hormone_indicators(sensor_data)
             air_quality = await self.ovlm.analyze_air_quality(sensor_data)
             nl_summary = await self.ovlm.generate_natural_language_summary(
@@ -322,6 +319,8 @@ class OVLMBridgeServer:
                 }
             )
 
+    # ── Message handling ───────────────────────────────────────────────────────
+
     async def handle_client_message(self, websocket, message: str):
         try:
             data = json.loads(message)
@@ -352,8 +351,7 @@ class OVLMBridgeServer:
             json.dumps(
                 {
                     "type": "streaming_started",
-                    "message": "🔄 Real-time olfactory analysis started. Updates every "
-                    f"{self._streaming_interval}s.",
+                    "message": f"🔄 Real-time olfactory analysis started. Updates every {self._streaming_interval}s.",
                     "timestamp": datetime.now().isoformat(),
                 }
             )
@@ -389,6 +387,8 @@ class OVLMBridgeServer:
             )
         )
 
+    # ── Streaming loop ─────────────────────────────────────────────────────────
+
     async def streaming_loop(self):
         while True:
             if self.is_streaming and self.clients:
@@ -408,6 +408,9 @@ class OVLMBridgeServer:
             await self.unregister_client(websocket)
 
     async def start_server(self):
+        logger.info("Connecting to Scentience device via BLE...")
+        await self._connect_ble()
+
         logger.info("Starting OVLM Bridge Server on %s:%d", self.host, self.port)
         asyncio.create_task(self.streaming_loop())
 
